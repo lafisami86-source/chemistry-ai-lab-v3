@@ -1,0 +1,60 @@
+export interface ChemicalElement {
+  atomicNumber: number;
+  symbol: string;
+  name: string;
+  atomicMass: number;
+  category: ElementCategory;
+  electronConfiguration: string;
+  electronegativity?: number;
+  phase: 'Solid' | 'Liquid' | 'Gas' | 'Unknown';
+  xpos: number;
+  ypos: number;
+  cpkHex?: string;
+}
+
+export type ElementCategory =
+  | 'alkali metal'
+  | 'alkaline earth metal'
+  | 'lanthanide'
+  | 'actinide'
+  | 'transition metal'
+  | 'post-transition metal'
+  | 'metalloid'
+  | 'diatomic nonmetal'
+  | 'polyatomic nonmetal'
+  | 'noble gas'
+  | 'unknown';
+
+export interface Reactant {
+  id: string;
+  element: ChemicalElement;
+  quantity: number;
+}
+
+export interface ReactionResult {
+  formula: string;
+  name: string;
+  yield: number;
+  stability: 'Stable' | 'Unstable' | 'Highly Unstable';
+  phase: string;
+  color: string;
+  description: string;
+  confidence: number;
+}
+
+export interface Discovery {
+  id: string;
+  title: string;
+  formula: string;
+  confidence: number;
+  timestamp: Date;
+  category: 'Catalyst' | 'Material' | 'Compound' | 'Reaction';
+}
+
+export interface NewsItem {
+  id: string;
+  title: string;
+  source: string;
+  summary: string;
+  date: string;
+}

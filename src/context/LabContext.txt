@@ -1,0 +1,165 @@
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import type { ChemicalElement, Reactant, ReactionResult, Discovery, NewsItem } from '../types';
+import { elements } from '../data/elements';
+import { reactionRules, getReactionType, newsItems } from '../data/reactions';
+import { v4 as uuidv4 } from 'uuid';
+
+interface LabContextType {
+  selectedElement: ChemicalElement | null;
+  setSelectedElement: (el: ChemicalElement | null) => void;
+  reactants: Reactant[];
+  addReactant: (element: ChemicalElement) => void;
+  removeReactant: (id: string) => void;
+  clearReactants: () => void;
+  reactionResult: ReactionResult | null;
+  isSynthesizing: boolean;
+  synthesize: () => void;
+  discoveries: Discovery[];
+  aiStatus: string;
+  activeCategory: string | null;
+  setActiveCategory: (cat: string | null) => void;
+  isFocusMode: boolean;
+  setIsFocusMode: (mode: boolean) => void;
+  news: NewsItem[];
+}
+
+const LabContext = createContext<LabContextType | undefined>(undefined);
+
+export function LabProvider({ children }: { children: ReactNode }) {
+  const [selectedElement, setSelectedElement] = useState<ChemicalElement | null>(null);
+  const [reactants, setReactants] = useState<Reactant[]>([]);
+  const [reactionResult, setReactionResult] = useState<ReactionResult | null>(null);
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const [discoveries, setDiscoveries] = useState<Discovery[]>([
+    {
+      id: uuidv4(),
+      title: 'Novel Perovskite Solar Cell Material',
+      formula: 'Cs2AgBiBr6',
+      confidence: 94,
+      timestamp: new Date(Date.now() - 86400000),
+      category: 'Material',
+    },
+    {
+      id: uuidv4(),
+      title: 'AI-Designed CO2 Reduction Catalyst',
+      formula: 'Cu3N/Cu2O',
+      confidence: 87,
+      timestamp: new Date(Date.now() - 172800000),
+      category: 'Catalyst',
+    },
+    {
+      id: uuidv4(),
+      title: 'High-Temperature Superconductor Candidate',
+      formula: 'LaH10',
+      confidence: 71,
+      timestamp: new Date(Date.now() - 259200000),
+      category: 'Compound',
+    },
+  ]);
+  const [aiStatus, setAiStatus] = useState('System Ready');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [isFocusMode, setIsFocusMode] = useState(false);
+
+  const addReactant = useCallback((element: ChemicalElement) => {
+    if (reactants.length >= 2) return;
+    setReactants(prev => [...prev, { id: uuidv4(), element, quantity: 1 }]);
+    setAiStatus(`Loaded ${element.symbol} into reaction chamber...`);
+  }, [reactants.length]);
+
+  const removeReactant = useCallback((id: string) => {
+    setReactants(prev => prev.filter(r => r.id !== id));
+  }, []);
+
+  const clearReactants = useCallback(() => {
+    setReactants([]);
+    setReactionResult(null);
+    setAiStatus('Reaction chamber cleared');
+  }, []);
+
+  const synthesize = useCallback(() => {
+    if (reactants.length < 2) {
+      setAiStatus('Error: Need 2 reactants');
+      return;
+    }
+
+    setIsSynthesizing(true);
+    setAiStatus('Analyzing quantum states...');
+    setReactionResult(null);
+
+    setTimeout(() => {
+      setAiStatus('Predicting reaction pathways...');
+    }, 1000);
+
+    setTimeout(() => {
+      setAiStatus('Calculating bond energies...');
+    }, 2000);
+
+    setTimeout(() => {
+      const [r1, r2] = reactants;
+      const type = getReactionType(r1.element.category, r2.element.category);
+      const rule = reactionRules[type] || reactionRules['metal+nonmetal'];
+      
+      let result = rule(r1.element.symbol, r2.element.symbol);
+      if (!result) {
+        result = {
+          formula: `${r1.element.symbol}${r2.element.symbol}`,
+          name: 'Unknown Compound',
+          yield: Math.random() * 30,
+          stability: 'Highly Unstable',
+          phase: 'Unknown',
+          color: '#666666',
+          description: 'Reaction thermodynamically unfavorable under standard conditions.',
+          confidence: 15,
+        };
+      }
+
+      setReactionResult(result);
+      setAiStatus(`Synthesis complete: ${result.formula}`);
+      
+      if (result.confidence > 70) {
+        const newDiscovery: Discovery = {
+          id: uuidv4(),
+          title: `Novel ${result.name}`,
+          formula: result.formula,
+          confidence: result.confidence,
+          timestamp: new Date(),
+          category: result.stability === 'Stable' ? 'Compound' : 'Reaction',
+        };
+        setDiscoveries(prev => [newDiscovery, ...prev].slice(0, 20));
+      }
+      
+      setIsSynthesizing(false);
+    }, 3500);
+  }, [reactants]);
+
+  return (
+    <LabContext.Provider value={{
+      selectedElement,
+      setSelectedElement,
+      reactants,
+      addReactant,
+      removeReactant,
+      clearReactants,
+      reactionResult,
+      isSynthesizing,
+      synthesize,
+      discoveries,
+      aiStatus,
+      activeCategory,
+      setActiveCategory,
+      isFocusMode,
+      setIsFocusMode,
+      news: newsItems,
+    }}>
+      {children}
+    </LabContext.Provider>
+  );
+}
+
+export function useLab() {
+  const context = useContext(LabContext);
+  if (context === undefined) {
+    throw new Error('useLab must be used within a LabProvider');
+  }
+  return context;
+}
