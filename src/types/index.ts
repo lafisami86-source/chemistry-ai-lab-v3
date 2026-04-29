@@ -34,21 +34,21 @@ export interface Reactant {
 export interface ReactionResult {
   formula: string;
   name: string;
-  bondType: string;
-  balancedEquation: string;
+  bondType?: string;
+  balancedEquation?: string;
   yield: number;
   stability: 'Stable' | 'Unstable' | 'Highly Unstable';
   phase: string;
   color: string;
   description: string;
   confidence: number;
-  deltaH: number;
-  deltaS: number;
-  deltaG: number;
-  optimalTemp: number;
-  safetyWarning: string | null;
-  isNobleGasReaction: boolean;
-  isAlloy: boolean;
+  deltaH?: number;
+  deltaS?: number;
+  deltaG?: number;
+  optimalTemp?: number;
+  safetyWarning?: string | null;
+  isNobleGasReaction?: boolean;
+  isAlloy?: boolean;
 }
 
 export interface Discovery {
